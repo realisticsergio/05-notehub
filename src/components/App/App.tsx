@@ -3,11 +3,18 @@ import { fetchNotes } from '../../services/noteService';
 import { useQuery } from '@tanstack/react-query';
 import css from './App.module.css';
 import NoteList from '../NoteList/NoteList';
+import Pagination from '../Pagination/Pagination';
+import SearchBox from '../SearchBox/SearchBox';
+import { useDebouncedCallback } from 'use-debounce';
 
 function App() {
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const debouncedSetSearch = useDebouncedCallback((value: string) => {
+  setSearch(value);
+  setPage(1);
+}, 500);
 
   const { data, isLoading, isError } = useQuery({
   queryKey: ['notes', search, page],
@@ -17,8 +24,14 @@ function App() {
   return (
      <div className={css.app}>
 	<header className={css.toolbar}>
-		{/* Компонент SearchBox */}
-		{/* Пагінація */}
+		<SearchBox onChange={debouncedSetSearch} value={search} />
+        {data && data.totalPages > 1 && (
+          <Pagination
+            pageCount={data.totalPages}
+            forcePage={page}
+            onPageChange={(selectedPage: number) => setPage(selectedPage)}
+          />
+        )}
 		{/* Кнопка створення нотатки */}
       </header>
       {isLoading && <p>Loading...</p>}
