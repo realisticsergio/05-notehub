@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import { fetchNotes } from '../../services/noteService';
-import { useQuery } from '@tanstack/react-query';
+import { fetchNotes, createNote } from '../../services/noteService';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import css from './App.module.css';
 import NoteList from '../NoteList/NoteList';
 import Pagination from '../Pagination/Pagination';
 import SearchBox from '../SearchBox/SearchBox';
 import { useDebouncedCallback } from 'use-debounce';
+import NoteForm from '../NoteForm/NoteForm';
+import Modal from '../Modal/Modal';
+
 
 function App() {
 
@@ -16,6 +19,17 @@ function App() {
   setPage(1);
 }, 500);
 
+  const queryClient = useQueryClient();
+const [isModalOpen, setIsModalOpen] = useState(false);
+
+const createNoteMutation = useMutation({
+  mutationFn: createNote,
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['notes'] });
+    setIsModalOpen(false);
+  },
+});
+  
   const { data, isLoading, isError } = useQuery({
   queryKey: ['notes', search, page],
   queryFn: () => fetchNotes(search, page),
@@ -32,11 +46,18 @@ function App() {
             onPageChange={(selectedPage: number) => setPage(selectedPage)}
           />
         )}
-		{/* Кнопка створення нотатки */}
+		<button className={css.button} onClick={() => setIsModalOpen(true)}>
+  Create note +
+</button>
       </header>
       {isLoading && <p>Loading...</p>}
       {isError && <p>Error loading notes</p>}
-      {data && <NoteList posts={data.notes} onEdit={() => {}} />}
+      {data && <NoteList posts={data.notes} onEdit={() => { }} />}
+      {isModalOpen && (
+        <Modal onClose={() => setIsModalOpen(false)}>
+          <NoteForm onSubmit={(values) => createNoteMutation.mutate(values)} />
+        </Modal>
+)}
 </div>
   )
 }
