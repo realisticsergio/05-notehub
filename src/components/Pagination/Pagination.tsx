@@ -7,11 +7,11 @@ interface PaginationProps {
     forcePage: number;
 }
 
-export default function Pagination({pageCount,  onPageChange, forcePage }: PaginationProps) {
+export default function Pagination({ pageCount,  onPageChange, forcePage }: PaginationProps) {
     return (
         <ReactPaginate
   pageCount={pageCount}
-  onPageChange={({ selected }) => onPageChange(selected + 1)}
+  onPageChange={(e) => onPageChange(e.selected + 1)}
   forcePage={forcePage - 1}
   containerClassName={css.pagination}
   activeClassName={css.active}
