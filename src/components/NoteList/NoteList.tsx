@@ -4,33 +4,32 @@ import css from "./NoteList.module.css"
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 
 interface NoteListProps {
-  posts: Note[];
-  onEdit: (post: Note) => void;
+  notes: Note[];
 }
 
-export default function NoteList({ posts, onEdit }: NoteListProps) {
+export default function NoteList({ notes }: NoteListProps) {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: deleteNote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
-      alert("Post deleted successfully!");
+      alert("Note deleted successfully!");
     },
   });
 
   return (
     <ul className={css.list}>
-      {posts.map((post) => (
-        <li key={post.id} className={css.listItem}>
-          <h2 className={css.title}>{post.title}</h2>
-          <p className={css.content}>{post.content}</p>
+      {notes.map((note) => (
+        <li key={note.id} className={css.listItem}>
+          <h2 className={css.title}>{note.title}</h2>
+          <p className={css.content}>{note.content}</p>
           <div className={css.footer}>
-            <button className={css.edit} onClick={() => onEdit(post)}>Edit</button>
+            <span className={css.tag}>{note.tag}</span>
             <button 
-              className={css.delete} 
+              className={css.button} 
               disabled={mutation.isPending}
-              onClick={() => mutation.mutate(post.id.toString())}
+              onClick={() => mutation.mutate(note.id.toString())}
             >
               {mutation.isPending ? "..." : "Delete"}
             </button>

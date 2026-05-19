@@ -8,3 +8,5 @@ export interface Note {
 }
 
 export type NoteTag = 'Todo' | 'Work' | 'Personal' | 'Meeting' | 'Shopping';
+
+export type NoteFormValues = Omit<Note, 'id'>;

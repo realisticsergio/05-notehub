@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { fetchNotes, createNote } from '../../services/noteService';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchNotes } from '../../services/noteService';
+import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData } from '@tanstack/react-query';
 import css from './App.module.css';
 import NoteList from '../NoteList/NoteList';
 import Pagination from '../Pagination/Pagination';
@@ -10,35 +11,28 @@ import NoteForm from '../NoteForm/NoteForm';
 import Modal from '../Modal/Modal';
 
 
-function App() {
-
+export default function App() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+
   const debouncedSetSearch = useDebouncedCallback((value: string) => {
-  setSearch(value);
-  setPage(1);
-}, 500);
+    setSearch(value);
+    setPage(1);
+  }, 300);
 
-  const queryClient = useQueryClient();
-const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-const createNoteMutation = useMutation({
-  mutationFn: createNote,
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['notes'] });
-    setIsModalOpen(false);
-  },
-});
-  
   const { data, isLoading, isError } = useQuery({
-  queryKey: ['notes', search, page],
-  queryFn: () => fetchNotes(search, page),
-});
+    queryKey: ['notes', search, page],
+    queryFn: () => fetchNotes(search, page),
+    placeholderData: keepPreviousData,
+  });
 
   return (
-     <div className={css.app}>
-	<header className={css.toolbar}>
-		<SearchBox onChange={debouncedSetSearch} value={search} />
+    <div className={css.app}>
+      <header className={css.toolbar}>
+        <SearchBox value={search} onChange={(value) => debouncedSetSearch(value)} />
+        
         {data && data.totalPages > 1 && (
           <Pagination
             pageCount={data.totalPages}
@@ -46,20 +40,24 @@ const createNoteMutation = useMutation({
             onPageChange={(selectedPage: number) => setPage(selectedPage)}
           />
         )}
-		<button className={css.button} onClick={() => setIsModalOpen(true)}>
-  Create note +
-</button>
+        
+        <button className={css.button} onClick={() => setIsModalOpen(true)}>
+          Create note +
+        </button>
       </header>
-      {isLoading && <p>Loading...</p>}
-      {isError && <p>Error loading notes</p>}
-      {data && <NoteList posts={data.notes} onEdit={() => { }} />}
+
+      <main>
+        {isLoading && <p>Loading notes...</p>}
+        {isError && <p>Error loading notes!</p>}
+        
+        {data && <NoteList notes={data.notes} />}
+      </main>
+
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
-          <NoteForm onSubmit={(values) => createNoteMutation.mutate(values)} />
+          <NoteForm onClose={() => setIsModalOpen(false)} />
         </Modal>
-)}
-</div>
-  )
+      )}
+    </div>
+  );
 }
-
-export default App;
