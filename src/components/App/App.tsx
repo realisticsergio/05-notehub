@@ -12,19 +12,19 @@ import Modal from '../Modal/Modal';
 
 
 export default function App() {
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
 
   const debouncedSetSearch = useDebouncedCallback((value: string) => {
     setSearch(value);
-    setPage(1);
+    setPage(0);
   }, 300);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['notes', search, page],
-    queryFn: () => fetchNotes(search, page),
+    queryFn: () => fetchNotes(search, page + 1),
     placeholderData: keepPreviousData,
   });
 
@@ -35,8 +35,8 @@ export default function App() {
         
         {data && data.totalPages > 1 && (
           <Pagination
-            pageCount={data.totalPages}
-            forcePage={page}
+            totalPages={data.totalPages}
+            currentPage={page}
             onPageChange={(selectedPage: number) => setPage(selectedPage)}
           />
         )}
